@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Бот лояльности для кофеен — CoffeeShopBot</title>
+  <meta name="description" content="CoffeeShopBot — мессенджер‑бот для кофеен: предзаказ, лояльность, рефералки и отзывы. Быстрый запуск, рост повторных покупок и удобная работа бариста."/>
+  <meta name="theme-color" content="#0f0f10"/>
+  <style>
+    :root{
+      --bg:#0f0f10;
+      --card:#17181b;
+      --muted:#8a9099;
+      --text:#f2f5f7;
+      --accent:#ff8a3d;
+      --accent-2:#ffd5ba;
+      --ok:#28c27a;
+      --warn:#ffd166;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --maxw: 1120px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif}
+    a{color:var(--text);text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+    .btn{display:inline-block;padding:14px 20px;border-radius:999px;background:linear-gradient(180deg,var(--accent),#ff6a00);color:#121212;font-weight:700;box-shadow:var(--shadow);transition:transform .12s ease, filter .12s ease}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.02)}
+    .btn.ghost{background:transparent;border:1px solid #2b2d31;color:var(--text)}
+    .badge{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(255,138,61,.12);color:var(--accent-2);font-weight:600}
+
+    header{position:sticky;top:0;background:rgba(15,15,16,.7);backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid rgba(255,255,255,.05);z-index:20}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#ffb37b)}
+    .brand b{font-size:18px}
+    .nav a{opacity:.9;margin-left:16px}
+    .nav a:hover{opacity:1}
+
+    /* HERO */
+    .hero{padding:72px 0 32px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
+    .h1{font-size:44px;line-height:1.08;margin:10px 0 14px}
+    .lead{color:var(--muted);font-size:18px}
+    .cta{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+    .hero-card{background:var(--card);padding:24px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+    .kpi{background:#1f2024;border:1px solid #2a2c31;border-radius:14px;padding:14px}
+    .kpi b{display:block;font-size:18px}
+    .kpi span{color:var(--muted);font-size:12px}
+
+    /* Sections */
+    .section{padding:54px 0;border-top:1px solid rgba(255,255,255,.06)}
+    .section h2{font-size:30px;margin:0 0 8px}
+    .section .sub{color:var(--muted);margin-bottom:22px}
+
+    .partners{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .partner{background:var(--card);border-radius:var(--radius);padding:18px;display:flex;align-items:center;gap:14px;border:1px solid #23252a}
+    .partner .p-logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#8b5e34,#d4a373)}
+
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{background:var(--card);border:1px solid #23252a;border-radius:var(--radius);padding:18px}
+    .card h3{margin:0 0 8px;font-size:18px}
+    .card p{color:var(--muted);margin:0}
+    .icon{width:28px;height:28px;border-radius:8px;background:#1f2024;display:inline-grid;place-items:center;margin-bottom:10px}
+
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .step{background:#1b1c20;border:1px solid #292b31;border-radius:var(--radius);padding:18px}
+    .step b{display:block;margin-bottom:6px}
+    .step small{color:var(--muted)}
+
+    .pricing{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .price{background:var(--card);border:1px solid #2a2c31;border-radius:var(--radius);padding:22px;position:relative}
+    .price .title{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .ribbon{position:absolute;top:16px;right:16px;background:linear-gradient(135deg,var(--accent),#ffb37b);color:#121212;font-weight:800;padding:6px 10px;border-radius:999px;font-size:12px}
+    .features{margin:12px 0 18px;padding:0;list-style:none}
+    .features li{display:flex;gap:10px;align-items:flex-start;margin:8px 0}
+    .features li span{color:var(--muted)}
+    .tick{width:18px;height:18px;border-radius:5px;background:rgba(40,194,122,.12);display:grid;place-items:center}
+    .dash{width:18px;height:18px;border-radius:5px;background:rgba(255,209,102,.12);display:grid;place-items:center}
+    .price .amount{font-size:28px;font-weight:800}
+    .hint{color:var(--muted);font-size:12px}
+
+    .custom{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .custom .note{background:#1b1c20;border:1px solid #292b31;border-radius:var(--radius);padding:18px}
+
+    .reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .review{background:#17191d;border:1px solid #24262b;border-radius:var(--radius);padding:18px}
+    .who{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .ava{width:36px;height:36px;border-radius:50%;background:#2b2e35}
+    .role{color:var(--muted);font-size:12px}
+
+    .faq{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .qa{background:#17191d;border:1px solid #24262b;border-radius:var(--radius);padding:16px}
+    .qa b{display:block;margin-bottom:6px}
+    .qa p{margin:0;color:var(--muted)}
+
+    footer{padding:40px 0 60px;color:var(--muted);text-align:center}
+    .cta-center{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+
+    /* ---------- Responsive: general phones ---------- */
+    @media (max-width: 640px){
+      .nav a:not(.btn){display:none}
+      .nav{height:56px}
+      .container{padding:0 16px}
+      .hero{padding:56px 0 16px}
+      .h1{font-size:32px;line-height:1.08}
+      .lead{font-size:16px}
+      .hero-grid{grid-template-columns:1fr;gap:16px}
+      .cta .btn{flex:1 1 100%;text-align:center}
+      .kpis{grid-template-columns:1fr 1fr}
+      .kpi{padding:12px}
+      .section{padding:40px 0}
+      .grid-3{grid-template-columns:1fr}
+      .steps{grid-template-columns:1fr}
+      .pricing{grid-template-columns:1fr}
+      .custom{grid-template-columns:1fr}
+      .reviews{grid-template-columns:1fr}
+      .faq{grid-template-columns:1fr}
+      .price .amount{font-size:24px}
+      .card, .step, .price, .review, .qa{border-radius:14px}
+      .btn{padding:14px 18px}
+    }
+
+    /* ---------- iPhone 13 target (390×844 CSS px @3x) ---------- */
+    @media screen and (device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3){
+      .h1{font-size:30px}
+      .kpis{grid-template-columns:1fr 1fr;gap:10px}
+      .kpi b{font-size:16px}
+      .price .amount{font-size:22px}
+      .hero-card{padding:18px}
+      .section h2{font-size:26px}
+      .cta .btn{padding:14px 16px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <b>CoffeeShopBot</b>
+        <span class="badge" aria-label="micro business friendly">⚡ Быстрый запуск</span>
+      </div>
+      <nav>
+        <a href="#benefits">Преимущества</a>
+        <a href="#how">Как работает</a>
+        <a href="#pricing">Стоимость</a>
+        <a href="#demo" class="btn" style="padding:8px 16px">Демо</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <h1 class="h1">Бот лояльности для кофеен<br/>который повышает повторные покупки</h1>
+          <p class="lead">Предзаказ, лояльность и отзывы в одном мессенджер‑боте. Без бумажных карт и лишних звонков. Подходит микробизнесу: просто, быстро, экономно.</p>
+          <div class="cta">
+            <a class="btn" href="https://t.me/RemoteCoffeeBot" target="_blank" rel="noopener">Демо для гостя</a>
+            <a class="btn ghost" href="https://t.me/+nXtSbkykP2MwNGQy" target="_blank" rel="noopener">Демо для кофейни</a>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><b>+27%</b><span>повторных заказов</span></div>
+            <div class="kpi"><b>≤60с</b><span>оформление заказа</span></div>
+            <div class="kpi"><b>×3</b><span>больше отзывов</span></div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <h3 style="margin:0 0 6px">Какую проблему решаем</h3>
+          <p class="lead" style="margin:0">Гости забывают бумажные карты, а бариста тратят время на уточнения. Бот берёт на себя предзаказ, лояльность и коммуникацию, чтобы очередь двигалась быстрее, а гости возвращались чаще.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARTNERS -->
+    <section class="section" id="partners">
+      <div class="container">
+        <h2>Где уже запущено</h2>
+        <p class="sub">Первые пилоты на локальных проектах.</p>
+        <div class="partners">
+          <div class="partner">
+            <div class="p-logo" aria-hidden="true"></div>
+            <div>
+              <b>725Coffee</b><br/>
+              <span class="muted">Пилотирование: предзаказ, лояльность, отзывы</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFITS -->
+    <section class="section" id="benefits">
+      <div class="container">
+        <h2>Преимущества для бизнеса</h2>
+        <p class="sub">Ключевое — рост повторных покупок и прозрачность операций.</p>
+        <div class="grid-3">
+          <div class="card">
+            <div class="icon">💳</div>
+            <h3>Лояльность из коробки</h3>
+            <p>Механика «N‑й напиток бесплатно». Бот сам считает бонусы и показывает баланс.</p>
+          </div>
+          <div class="card">
+            <div class="icon">⚡</div>
+            <h3>Быстрый предзаказ</h3>
+            <p>Каталог с суммой заказа, комментарии (молоко/сироп/корица), доставка или самовывоз.</p>
+          </div>
+          <div class="card">
+            <div class="icon">📣</div>
+            <h3>Коммуникации и промо</h3>
+            <p>Рассылки всем или по сегментам: сезонное меню, «секретные» позиции, дегустации, комбо.</p>
+          </div>
+          <div class="card">
+            <div class="icon">⭐</div>
+            <h3>Отзывы</h3>
+            <p>После хорошей оценки — нативное приглашение оставить отзыв в Яндекс Картах.</p>
+          </div>
+          <div class="card">
+            <div class="icon">👩‍🍳</div>
+            <h3>Удобно бариста</h3>
+            <p>Единый чат заказов, уточнения клиенту в пару кликов, стоп‑лист и паузы в обслуживании.</p>
+          </div>
+          <div class="card">
+            <div class="icon">📊</div>
+            <h3>Контроль менеджера</h3>
+            <p>Канал менеджмента: все заказы, оценки, отмены; простые сводки по метрикам.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how">
+      <div class="container">
+        <h2>Как это работает</h2>
+        <p class="sub">Запуск занимает минимум времени — остальное сделает бот.</p>
+        <div class="steps">
+          <div class="step">
+            <b>1) Настройка под кофейню</b>
+            <small>Меню, цены, часы работы, правила лояльности. Полное меню можно добавить картинками или PDF.</small>
+          </div>
+          <div class="step">
+            <b>2) Онбординг гостей</b>
+            <small>Приветствие, имя, телефон (по желанию). Меню по категориям и чат без передачи контактов.</small>
+          </div>
+          <div class="step">
+            <b>3) Заказ и статусы</b>
+            <small>Сумма заказа сразу видна. Доставка/самовывоз, комментарии к напитку, статусы «готовится/готов».</small>
+          </div>
+          <div class="step">
+            <b>4) Лояльность и отзывы</b>
+            <small>Бот сам учитывает бонусы и мягко предлагает оставить отзыв после хорошей оценки.</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="section" id="pricing">
+      <div class="container">
+        <h2>Стоимость</h2>
+        <p class="sub">Два тарифа для старта и роста. Можно перейти на следующий в любой момент.</p>
+        <div class="pricing">
+          <!-- Base plan -->
+          <div class="price">
+            <div class="title"><h3 style="margin:0">Базовый</h3><span class="hint">Лучше для первой точки</span></div>
+            <div class="amount">3&nbsp;000 руб/мес</div>
+            <ul class="features">
+              <li><div class="tick">✓</div><span>Онбординг гостей, меню по категориям</span></li>
+              <li><div class="tick">✓</div><span>Предзаказ: самовывоз/доставка, комментарии к напитку</span></li>
+              <li><div class="tick">✓</div><span>Базовая лояльность: «6‑й напиток бесплатно»</span></li>
+              <li><div class="tick">✓</div><span>Единый чат заказов для смены, стоп‑лист</span></li>
+              <li><div class="dash">•</div><span>Рассылки всем (без сегментации)</span></li>
+              <li><div class="dash">•</div><span>Стандартные отчёты</span></li>
+              <li><div class="dash">•</div><span>1 точка, 3 бариста</span></li>
+              <li><div class="dash">•</div><span>Поддержка по e‑mail</span></li>
+            </ul>
+            <a class="btn" href="https://t.me/m_m_pa" target="_blank" rel="noopener">Оставить заявку</a>
+          </div>
+          <!-- Standard plan -->
+          <div class="price">
+            <div class="ribbon">Рекомендуем</div>
+            <div class="title"><h3 style="margin:0">Нормальный</h3><span class="hint">Для активного роста</span></div>
+            <div class="amount">6&nbsp;000 руб/мес</div>
+            <ul class="features">
+              <li><div class="tick">✓</div><span>Всё из «Базового»</span></li>
+              <li><div class="tick">✓</div><span>Рефералки «Приведи друга»</span></li>
+              <li><div class="tick">✓</div><span>Сегментированные рассылки (новые, спящие, постоянные)</span></li>
+              <li><div class="tick">✓</div><span>Канал менеджмента: заказы, оценки, отмены</span></li>
+              <li><div class="tick">✓</div><span>Расширенные отчёты и экспорт</span></li>
+              <li><div class="tick">✓</div><span>Смены бариста, паузы в обслуживании, гибкий график работы</span></li>
+              <li><div class="tick">✓</div><span>До 3 точек, до 12 бариста</span></li>
+              <li><div class="tick">✓</div><span>Приоритетная поддержка в мессенджере</span></li>
+            </ul>
+            <a class="btn" href="https://t.me/m_m_pa" target="_blank" rel="noopener">Оставить заявку</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUSTOMIZATION -->
+    <section class="section" id="customization">
+      <div class="container custom">
+        <div>
+          <h2>Кастомизация под вашу кофейню</h2>
+          <p class="sub">Готовы добавлять и менять функциональность под запрос: от уникальной механики лояльности до интеграций с кассой/CRM.</p>
+          <ul class="features">
+            <li><div class="tick">✓</div><span>Уникальные правила лояльности и акции</span></li>
+            <li><div class="tick">✓</div><span>Доп. роли и права для персонала</span></li>
+            <li><div class="tick">✓</div><span>Импорт/экспорт меню, интеграции</span></li>
+            <li><div class="tick">✓</div><span>Брендирование: логотип, цвета, тексты</span></li>
+          </ul>
+        </div>
+        <div class="note">
+          <b>Как обсудить доработку?</b>
+          <p class="lead">Напишите нам в демо‑чате кофейни и кратко опишите задачу. Мы предложим варианты и оценим сроки/стоимость.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section" id="reviews">
+      <div class="container">
+        <h2>Отзывы гостей</h2>
+        <p class="sub">Про удобный предзаказ, понятную лояльность и связь с кофейней</p>
+        <div class="reviews">
+          <div class="review">
+            <div class="who"><div class="ava"></div><div><b>Мария</b><div class="role">частый гость</div></div></div>
+            <p>Заказываю по пути на работу, подхожу — латте уже готов. Бонусы копятся незаметно, шестой напиток — в подарок ✨</p>
+          </div>
+          <div class="review">
+            <div class="who"><div class="ava"></div><div><b>Светлана</b><div class="role">самовывоз</div></div></div>
+            <p>Уточнила «овсяное без сиропа» прямо в боте, пришло уведомление о готовности — быстро и удобно.</p>
+          </div>
+          <div class="review">
+            <div class="who"><div class="ava"></div><div><b>Антон</b><div class="role">delivery</div></div></div>
+            <p>Нравится, что не нужно звонить: написал комментарий к заказу, бариста ответил в чате за минуту.</p>
+          </div>
+          <div class="review">
+            <div class="who"><div class="ava"></div><div><b>Екатерина</b><div class="role">люблю акции</div></div></div>
+            <p>Программа лояльности понятная: вижу, сколько осталось до бесплатного напитка. Периодически приходят полезные анонсы.</p>
+          </div>
+          <div class="review">
+            <div class="who"><div class="ava"></div><div><b>Дима</b><div class="role">чаще стал заходить</div></div></div>
+            <p>Через реферальную ссылку привёл друга — мне начислился бесплатный капучино. Кайф!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ + CTA -->
+    <section class="section" id="faq">
+      <div class="container">
+        <h2>FAQ</h2>
+        <div class="faq">
+          <div class="qa">
+            <b>Нужны ли телефоны гостей?</b>
+            <p>Нет. Телефон запрашивается только для доставки и по желанию гостя. Общение возможно прямо в боте.</p>
+          </div>
+          <div class="qa">
+            <b>Можно ли временно скрыть позиции?</b>
+            <p>Да, есть стоп‑лист. Также можно ставить паузы в обслуживании и управлять сменами бариста.</p>
+          </div>
+          <div class="qa">
+            <b>Сколько стоит запуск?</b>
+            <p>Сам запуск — бесплатно. Оплачивается абонентская плата согласно выбранному тарифу.</p>
+          </div>
+          <div class="qa">
+            <b>Нужен сайт или CRM?</b>
+            <p>Нет. Бот работает автономно. Интеграции с вашими системами можно подключить по мере роста.</p>
+          </div>
+        </div>
+        <div class="cta-center" id="demo">
+          <a class="btn" href="https://t.me/m_m_pa" target="_blank" rel="noopener" aria-label="Оставить заявку в Telegram">Оставить заявку</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      Сделано с заботой о микробизнесе • © CoffeeShopBot
+    </div>
+  </footer>
+</body>
+</html>
